@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="560" viewBox="0 0 280 560">
+  <!-- 手机外框 -->
+  <rect x="10" y="10" width="260" height="540" rx="40" ry="40" fill="#2c2c2c" stroke="#1a1a1a" stroke-width="2"/>
+  <!-- 屏幕区域 -->
+  <rect x="25" y="80" width="230" height="400" rx="20" ry="20" fill="#000"/>
+  <!-- 顶部刘海 -->
+  <rect x="110" y="25" width="60" height="25" rx="12" ry="12" fill="#1a1a1a"/>
+  <!-- 底部home指示器 -->
+  <rect x="120" y="510" width="40" height="4" rx="2" ry="2" fill="#666"/>
+</svg>
