@@ -114,7 +114,6 @@
 
 /* 视频区域 */
 .video-container {
-  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9; /* 固定16:9比例 */
   background-color: #000;
@@ -124,94 +123,10 @@
 
 /* 视频内容：让其保持比例并居中显示 */
 .video-player {
-  position: absolute;
-  top: 50%;
-  left: 50%;
   width: 100%;
   height: 100%;
-  transform: translate(-50%, -50%);
   object-fit: contain; /* 保持比例，完整显示视频（不裁切） */
   background-color: #000; /* 视频比例不匹配时，留黑边 */
-}
-
-
-.play-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-}
-
-.play-button {
-  color: #fff;
-  font-size: 50px;
-  opacity: 0.8;
-}
-
-.video-controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-  color: #fff;
-}
-
-.time-display {
-  font-size: 12px;
-  width: 40px;
-  text-align: center;
-}
-
-.progress-bar {
-  flex-grow: 1;
-  height: 20px; /* 增加点击区域 */
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  margin: 0 10px;
-}
-
-.progress-track {
-  position: relative;
-  width: 100%;
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.5);
-  border-radius: 2px;
-}
-
-.progress-fill {
-  position: absolute;
-  height: 100%;
-  background-color: #ff4500;
-  border-radius: 2px;
-}
-
-.progress-thumb {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background-color: #fff;
-  border-radius: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.fullscreen-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
 }
 
 /* 标签、标题和描述 */

@@ -1,4 +1,3 @@
-import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './VideoSharePage.css'
 import wechat from '../img/wechat.png';
@@ -16,56 +15,6 @@ import cover_landscap from '../img/cover_landscap.jpg';
 
 const VideoSharePage = () => {
   const navigate = useNavigate()
-  const videoRef = useRef(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-
-  // 处理视频播放/暂停
-  const togglePlay = (e) => {
-    e.stopPropagation()
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
-      }
-      setIsPlaying(!isPlaying)
-    }
-  }
-
-  // 处理时间更新
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime)
-    }
-  }
-
-  // 处理视频加载
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration)
-    }
-  }
-
-  // 处理进度条点击
-  const handleProgressClick = (e) => {
-    e.stopPropagation()
-    if (videoRef.current) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const clickX = e.clientX - rect.left
-      const newTime = (clickX / rect.width) * duration
-      videoRef.current.currentTime = newTime
-      setCurrentTime(newTime)
-    }
-  }
-
-  // 格式化时间
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-  }
 
   // 点击非视频区域跳转到下载页面
   const handlePageClick = () => {
@@ -115,42 +64,13 @@ const VideoSharePage = () => {
       {/* 视频区域 */}
       <div className="video-container" onClick={handleVideoAreaClick}>
         <video
-          ref={videoRef}
           className="video-player"
-          poster={cover_landscap}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onClick={togglePlay}
+          poster={cover_portrait}
+          controls
         >
-          <source src={test_landscap_video} type="video/mp4" />
+          <source src={test_portrait_video} type="video/mp4" />
           您的浏览器不支持视频播放
         </video>
-
-        {/* 播放按钮覆盖层 */}
-        {!isPlaying && (
-          <div className="play-overlay" onClick={togglePlay}>
-            <div className="play-button">▶</div>
-          </div>
-        )}
-
-        {/* 视频控制栏 */}
-        <div className="video-controls">
-          <span className="time-display">{formatTime(currentTime)}</span>
-          <div className="progress-bar" onClick={handleProgressClick}>
-            <div className="progress-track">
-              <div
-                className="progress-fill"
-                style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
-              ></div>
-              <div
-                className="progress-thumb"
-                style={{ left: `${duration ? (currentTime / duration) * 100 : 0}%` }}
-              ></div>
-            </div>
-          </div>
-          <span className="time-display">{formatTime(duration)}</span>
-          <button className="fullscreen-btn">⛶</button>
-        </div>
       </div>
 
       {/* 标签区域 */}
