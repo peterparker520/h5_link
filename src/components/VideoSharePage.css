@@ -116,15 +116,24 @@
 .video-container {
   position: relative;
   width: 100%;
+  aspect-ratio: 16 / 9; /* 固定16:9比例 */
   background-color: #000;
   border-radius: 10px;
   overflow: hidden;
 }
 
+/* 视频内容：让其保持比例并居中显示 */
 .video-player {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 100%;
-  display: block;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  object-fit: contain; /* 保持比例，完整显示视频（不裁切） */
+  background-color: #000; /* 视频比例不匹配时，留黑边 */
 }
+
 
 .play-overlay {
   position: absolute;

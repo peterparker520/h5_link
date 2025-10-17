@@ -7,6 +7,11 @@ import thumb from '../img/thumb.png';
 import reply from '../img/reply.png';
 import music from '../img/music.png';
 import microphone from '../img/microphone.png';
+import test_portrait_video from '../img/test_portrait.mp4';
+import test_landscap_video from '../img/test_landscap.mp4';
+import cover_portrait from '../img/cover_portrait.jpg';
+import cover_landscap from '../img/cover_landscap.jpg';
+
 
 
 const VideoSharePage = () => {
@@ -79,7 +84,7 @@ const VideoSharePage = () => {
       <div className="header">
         <div className="brand-info">
           <div className="brand-icon">
-            <img src="/logo.svg" alt="时光拍" />
+            <img src="/logo.png" alt="时光拍" />
           </div>
           <div className="brand-text">
             <span className="brand-name">时光拍</span>
@@ -92,7 +97,7 @@ const VideoSharePage = () => {
       {/* 用户信息 */}
       <div className="user-info">
         <div className="user-avatar">
-          <img src="/avatar.svg" alt="人淡如菊" />
+          <img src="/logo.png" alt="人淡如菊" />
         </div>
         <div className="user-details">
           <div className="username">
@@ -112,12 +117,12 @@ const VideoSharePage = () => {
         <video
           ref={videoRef}
           className="video-player"
-          poster="/video-poster.svg"
+          poster={cover_landscap}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onClick={togglePlay}
         >
-          <source src="/sample-video.mp4" type="video/mp4" />
+          <source src={test_landscap_video} type="video/mp4" />
           您的浏览器不支持视频播放
         </video>
 
@@ -165,7 +170,7 @@ const VideoSharePage = () => {
 
       {/* 推广卡片 */}
       <div className="promo-card">
-        <img src="/promo-image.svg" alt="旅行美食模板24镜头" className="promo-image" />
+        <img src="/logo.png" alt="旅行美食模板24镜头" className="promo-image" />
         <div className="promo-content">
           <div className="promo-text-content">
             <div className="promo-header">
@@ -210,7 +215,7 @@ const VideoSharePage = () => {
         <h3 className="comments-title">精彩评论 (123)</h3>
 
         <div className="comment-item">
-          <img src="/avatar1.svg" alt="人淡如菊" className="comment-avatar" />
+          <img src="/logo.png" alt="人淡如菊" className="comment-avatar" />
           <div className="comment-content">
             <div className="comment-header">
               <span className="comment-username">人淡如菊</span>
@@ -238,7 +243,7 @@ const VideoSharePage = () => {
         </div>
 
         <div className="comment-item">
-          <img src="/avatar2.svg" alt="热爱生活" className="comment-avatar" />
+          <img src="/logo.png" alt="热爱生活" className="comment-avatar" />
           <div className="comment-content">
             <div className="comment-header">
               <span className="comment-username">热爱生活</span>
@@ -261,7 +266,7 @@ const VideoSharePage = () => {
         </div>
 
         <div className="comment-item">
-          <img src="/avatar3.svg" alt="来自北方的张哥" className="comment-avatar" />
+          <img src="/logo.png" alt="来自北方的张哥" className="comment-avatar" />
           <div className="comment-content">
             <div className="comment-header">
               <span className="comment-username">来自北方的张哥</span>
