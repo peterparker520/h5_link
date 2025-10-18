@@ -27,22 +27,12 @@ const VideoSharePage = () => {
     e.stopPropagation()
   }
 
-  const videoRef = useRef(null);
-  const [isPortrait, setIsPortrait] = useState(false);
-
-  const handleLoadedMetadata = () => {
-    const video = videoRef.current;
-    if (video) {
-      const { videoWidth, videoHeight } = video;
-      setIsPortrait(videoHeight > videoWidth); // 判断是否竖屏
-    }
-  };
-
   return (
     <div className="video-share-page" onClick={handlePageClick}>
-
-      {/* 顶部banner */}
-      <div className="header">
+      {/* 主内容区域 */}
+      <div className="main-content">
+        {/* 顶部banner */}
+        <div className="header">
         <div className="brand-info">
           <div className="brand-icon">
             <img src="/logo.png" alt="时光拍" />
@@ -52,7 +42,10 @@ const VideoSharePage = () => {
             <span className="brand-slogan">时光会走远，美剪能留痕</span>
           </div>
         </div>
-        <button className="open-app-btn">打开APP</button>
+        <button className="open-app-btn">
+          <span className="mobile-text">打开APP</span>
+          <span className="desktop-text">下载APP</span>
+        </button>
       </div>
 
       {/* 用户信息 */}
@@ -75,15 +68,13 @@ const VideoSharePage = () => {
 
       {/* 视频区域 */}
       <div
-        className={`video-container ${isPortrait ? "portrait" : "landscape"}`}
+        className={`video-container ${"landscape"}`}
         onClick={handleVideoAreaClick}
       >
         <video
-          ref={videoRef}
           className="video-player"
           poster={cover_portrait}
           controls
-          onLoadedMetadata={handleLoadedMetadata}
         >
           <source src={test_portrait_video} type="video/mp4" />
           您的浏览器不支持视频播放
@@ -226,9 +217,30 @@ const VideoSharePage = () => {
         </div>
       </div>
 
-      {/* 底部打开APP按钮 */}
-      <div className="bottom-app-button">
-        <button className="open-app-bottom">打开APP</button>
+        {/* 底部打开APP按钮 */}
+        <div className="bottom-app-button">
+          <button className="open-app-bottom">打开APP</button>
+        </div>
+      </div>
+
+      {/* PC端侧边栏 */}
+      <div className="sidebar-content">
+        <img
+          src={cover_landscap}
+          alt="时光拍应用展示"
+          className="sidebar-image"
+        />
+        <h3 className="sidebar-title">时光拍 - 记录美好时光</h3>
+        <p className="sidebar-description">
+          专业的视频编辑工具，让每一个瞬间都值得被记录和分享
+        </p>
+        <ul className="sidebar-features">
+          <li>智能视频剪辑</li>
+          <li>丰富滤镜特效</li>
+          <li>一键分享社交</li>
+          <li>高清视频导出</li>
+          <li>海量音乐素材</li>
+        </ul>
       </div>
     </div>
   )
