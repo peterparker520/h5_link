@@ -115,10 +115,19 @@
 /* 视频区域 */
 .video-container {
   width: 100%;
-  aspect-ratio: 16 / 9; /* 固定16:9比例 */
   background-color: #000;
   border-radius: 10px;
   overflow: hidden;
+}
+
+/* 横屏视频（16:9） */
+.video-container.landscape {
+  aspect-ratio: 16 / 9;
+}
+
+/* 竖屏视频（9:16） */
+.video-container.portrait {
+  aspect-ratio: 9 / 16;
 }
 
 /* 视频内容：让其保持比例并居中显示 */

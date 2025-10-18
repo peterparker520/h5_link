@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import './VideoSharePage.css'
+import  { useRef, useState } from "react";
 import wechat from '../img/wechat.png';
 import wechatMoment from '../img/wechat_moment.png';
 import thumb from '../img/thumb.png';
@@ -25,6 +26,17 @@ const VideoSharePage = () => {
   const handleVideoAreaClick = (e) => {
     e.stopPropagation()
   }
+
+  const videoRef = useRef(null);
+  const [isPortrait, setIsPortrait] = useState(false);
+
+  const handleLoadedMetadata = () => {
+    const video = videoRef.current;
+    if (video) {
+      const { videoWidth, videoHeight } = video;
+      setIsPortrait(videoHeight > videoWidth); // 判断是否竖屏
+    }
+  };
 
   return (
     <div className="video-share-page" onClick={handlePageClick}>
@@ -62,11 +74,16 @@ const VideoSharePage = () => {
       </div>
 
       {/* 视频区域 */}
-      <div className="video-container" onClick={handleVideoAreaClick}>
+      <div
+        className={`video-container ${isPortrait ? "portrait" : "landscape"}`}
+        onClick={handleVideoAreaClick}
+      >
         <video
+          ref={videoRef}
           className="video-player"
           poster={cover_portrait}
           controls
+          onLoadedMetadata={handleLoadedMetadata}
         >
           <source src={test_portrait_video} type="video/mp4" />
           您的浏览器不支持视频播放
