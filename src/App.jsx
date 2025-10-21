@@ -16,9 +16,9 @@ function App() {
         return;
       }
 
-      if (width <= 1025 && !location.pathname.startsWith("/mobile")) {
+      if (width <= 768 && !location.pathname.startsWith("/mobile")) {
         navigate("/mobile", { replace: true });
-      } else if (width > 1025 && !location.pathname.startsWith("/desktop")) {
+      } else if (width > 768 && !location.pathname.startsWith("/desktop")) {
         navigate("/desktop", { replace: true });
       }
     };

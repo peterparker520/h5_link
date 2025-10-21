@@ -95,8 +95,10 @@ const VideoSharePage_Desktop = () => {
                             <span className="brand-slogan">时光拍，拍摄美好时光</span>
                         </div>
                     </div>
-                    <button className="open-app-btn" onClick={handleDownloadClick}>下载APP</button>
-                    {/* <span>关于我们</span> */}
+                    <div className="header-right">
+                        <span className="about-us">关于我们</span>
+                        <button className="open-app-btn" onClick={handleDownloadClick}>下载APP</button>
+                    </div>
                 </div>
             </div>
 
