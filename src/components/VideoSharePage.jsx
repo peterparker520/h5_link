@@ -193,7 +193,7 @@ const VideoSharePage = () => {
               </div>
             </div>
           </div>
-
+          <div class="container">
           <div className="comment-item">
             <img src={cover_landscap} alt="热爱生活" className="comment-avatar" />
             <div className="comment-content">
@@ -246,15 +246,16 @@ const VideoSharePage = () => {
                 </div>
               </div>
             </div>
+            </div>
           </div>
         </div>
 
-        {/* 底部打开APP按钮 */}
-        <div className="bottom-app-button">
-          <button className="open-app-bottom">打开APP</button>
-        </div>
       </div>
 
+      {/* 底部打开APP按钮 - 固定在屏幕底部 */}
+      <div className="bottom-app-button">
+        <button className="open-app-bottom">打开APP</button>
+      </div>
 
     </div>
   )
