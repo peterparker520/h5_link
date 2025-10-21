@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
+import { useRef, useEffect, useState } from 'react';
 import './VideoSharePage.css'
 import test_portrait_video from '../img/test_portrait.mp4';
 import test_landscap_video from '../img/test_landscap.mp4';
@@ -9,6 +10,64 @@ import cover_landscap from '../img/cover_landscap.jpg';
 
 const VideoSharePage = () => {
   const navigate = useNavigate()
+  const videoRef = useRef(null)
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  // 使用 useEffect 来管理视频元素的生命周期
+  useEffect(() => {
+    const video = videoRef.current
+    if (video) {
+      // 视频数据加载完成事件
+      const handleLoadedData = () => {
+        setIsVideoLoaded(true)
+        console.log('视频数据已加载')
+      }
+
+      // 视频开始播放事件
+      const handlePlay = () => {
+        setIsPlaying(true)
+        console.log('视频开始播放')
+      }
+
+      // 视频暂停事件
+      const handlePause = () => {
+        setIsPlaying(false)
+        console.log('视频暂停')
+      }
+
+      // 视频结束事件
+      const handleEnded = () => {
+        setIsPlaying(false)
+        console.log('视频播放结束')
+      }
+
+      // 视频加载错误事件
+      const handleError = (e) => {
+        console.error('视频加载错误:', e)
+        setIsVideoLoaded(false)
+      }
+
+      // 添加事件监听器
+      video.addEventListener('loadeddata', handleLoadedData)
+      video.addEventListener('play', handlePlay)
+      video.addEventListener('pause', handlePause)
+      video.addEventListener('ended', handleEnded)
+      video.addEventListener('error', handleError)
+
+      // 设置视频预加载策略
+      video.preload = 'metadata' // 只预加载元数据，节省带宽
+
+      // 清理函数：组件卸载时移除事件监听器
+      return () => {
+        video.removeEventListener('loadeddata', handleLoadedData)
+        video.removeEventListener('play', handlePlay)
+        video.removeEventListener('pause', handlePause)
+        video.removeEventListener('ended', handleEnded)
+        video.removeEventListener('error', handleError)
+      }
+    }
+  }, []) // 空依赖数组确保只在组件挂载时运行一次
 
   // 点击非视频区域跳转到下载页面
   const handlePageClick = () => {
@@ -64,9 +123,16 @@ const VideoSharePage = () => {
           onClick={handleVideoAreaClick}
         >
           <video
+            ref={videoRef}
             className="video-player"
             poster={cover_landscap}
             controls
+            preload="metadata"
+            playsInline
+            webkit-playsinline="true"
+            x5-playsinline="true"
+            x5-video-player-type="h5"
+            x5-video-player-fullscreen="true"
           >
             <source src={test_landscap_video} type="video/mp4" />
             您的浏览器不支持视频播放
@@ -90,7 +156,7 @@ const VideoSharePage = () => {
 
         {/* 推广卡片 */}
         <div className="promo-card">
-          <img src="/logo.png" alt="旅行美食模板24镜头" className="promo-image" />
+          <img src={cover_portrait} alt="旅行美食模板24镜头" className="promo-image" />
           <div className="promo-content">
             <div className="promo-text-content">
               <div className="promo-header">
