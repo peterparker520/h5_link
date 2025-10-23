@@ -132,6 +132,14 @@ html, body {
   background-color: #000;
   border-radius: 10px;
   overflow: hidden;
+  /* iOS微信GPU渲染优化 */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
 }
 
 /* 横屏视频（16:9） */
@@ -145,6 +153,19 @@ html, body {
   height: 100%;
   object-fit: contain; /* 保持比例，完整显示视频（不裁切） */
   background-color: #000; /* 视频比例不匹配时，留黑边 */
+  /* iOS微信视频播放优化 */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  /* 确保视频在iOS微信中正确显示 */
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* 标签、标题和描述 */

@@ -1,16 +1,17 @@
-import { useNavigate } from 'react-router-dom';
+
 import { useRef, useEffect, useState } from 'react';
 import './VideoSharePage_Desktop.css'; // We will create this CSS file next
 import test_landscap_video from '../img/test_landscap.mp4';
-
+import test_portrait_video from '../img/test_portrait.mp4';
 import cover_landscap from '../img/cover_landscap.jpg';
+import cover_portrait from '../img/cover_portrait.jpg';
 import qr_code from '../img/qr_code.png'; // Assuming you have a QR code image
 
 const VideoSharePage_Desktop = () => {
-    const navigate = useNavigate();
     const videoRef = useRef(null);
     const [isVideoLoaded, setIsVideoLoaded] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
 
     // 使用 useEffect 来管理视频元素的生命周期
     useEffect(() => {
@@ -67,13 +68,18 @@ const VideoSharePage_Desktop = () => {
         }
     }, []); // 空依赖数组确保只在组件挂载时运行一次
 
-    // 点击非视频区域跳转到下载页面
+    // 点击非视频区域显示二维码模态窗
     const handlePageClick = () => {
-        navigate('/download');
+        setShowQRModal(true);
     };
 
     const handleDownloadClick = () => {
-        navigate('/download');
+        setShowQRModal(true);
+    };
+
+    // 关闭模态窗
+    const handleCloseModal = () => {
+        setShowQRModal(false);
     };
 
     // 阻止视频区域的点击事件冒泡
@@ -138,7 +144,7 @@ const VideoSharePage_Desktop = () => {
                                 x5-video-player-type="h5"
                                 x5-video-player-fullscreen="true"
                             >
-                                <source src={test_landscap_video} type="video/mp4" />
+                                <source src={test_portrait_video} type="video/mp4" />
                                 您的浏览器不支持视频播放
                             </video>
                         </div>
@@ -240,7 +246,7 @@ const VideoSharePage_Desktop = () => {
                                             </span>
                                         </div>
                                     </div>
-                                </div>  
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -254,8 +260,58 @@ const VideoSharePage_Desktop = () => {
                         <p className="promo-slogan">记录美好生活，分享动人时刻</p>
                         <button className="download-btn" onClick={handleDownloadClick}>立即下载</button>
                     </div>
+
+                    {/* 推广卡片 */}
+                    <div className="promo-card">
+                        <img src={cover_portrait} alt="旅行美食模板24镜头" className="promo-image" />
+                        <div className="promo-content">
+                            <div className="promo-text-content">
+                                <div className="promo-header">
+                                    <h3>旅行唯美模板24镜头</h3>
+                                    <button className="use-template-btn">创作同款</button>
+                                </div>
+
+                                <p className="audio-info">
+                                    <span className="audio-item">
+                                        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5.75 13.0872V3.38338C5.75 2.9821 5.75 2.78146 5.823 2.61873C5.88735 2.47528 5.99097 2.35296 6.12189 2.2659C6.2704 2.16714 6.46831 2.13416 6.86413 2.06819L14.1975 0.845964C14.7316 0.756941 14.9987 0.712429 15.2068 0.789738C15.3895 0.85758 15.5426 0.987279 15.6395 1.15629C15.75 1.34889 15.75 1.61965 15.75 2.16116V11.4205M5.75 13.0872C5.75 14.4679 4.63071 15.5872 3.25 15.5872C1.86929 15.5872 0.75 14.4679 0.75 13.0872C0.75 11.7065 1.86929 10.5872 3.25 10.5872C4.63071 10.5872 5.75 11.7065 5.75 13.0872ZM15.75 11.4205C15.75 12.8013 14.6307 13.9205 13.25 13.9205C11.8693 13.9205 10.75 12.8013 10.75 11.4205C10.75 10.0398 11.8693 8.92054 13.25 8.92054C14.6307 8.92054 15.75 10.0398 15.75 11.4205Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        <span className="audio-text">我是一个 BGM...</span>
+                                    </span>
+
+                                    <span className="audio-item">
+                                        <svg width="14" height="19" viewBox="0 0 14 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12.4167 7.41667V9.08333C12.4167 12.305 9.80499 14.9167 6.58333 14.9167M0.75 7.41667V9.08333C0.75 12.305 3.36167 14.9167 6.58333 14.9167M6.58333 14.9167V17.4167M3.25 17.4167H9.91667M6.58333 11.5833C5.20262 11.5833 4.08333 10.464 4.08333 9.08333V3.25C4.08333 1.86929 5.20262 0.75 6.58333 0.75C7.96404 0.75 9.08333 1.86929 9.08333 3.25V9.08333C9.08333 10.464 7.96404 11.5833 6.58333 11.5833Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        <span className="audio-text">中年男子配音</span>
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* QR Code Modal */}
+            {showQRModal && (
+                <div className="qr-modal-overlay" onClick={handleCloseModal}>
+                    <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="qr-modal-header">
+                            <h3>扫码下载 时光拍APP</h3>
+                            <button className="qr-modal-close" onClick={handleCloseModal}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="qr-modal-body">
+                            <img src={qr_code} alt="Download App QR Code" className="qr-modal-img" />
+                            <p className="qr-modal-text">使用手机扫描二维码下载APP</p>
+                            <p className="qr-modal-slogan">记录美好生活，分享动人时刻</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
