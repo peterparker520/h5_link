@@ -194,7 +194,14 @@ html, body {
 .video-description {
   font-size: 15px;
   line-height: 1.5;
-  color: #555;
+  color: #000000;
+  display: -webkit-box;   
+  -webkit-box-orient: vertical; 
+  -webkit-line-clamp: 3;    
+  overflow: hidden;     
+  text-overflow: ellipsis;  
+  line-height: 1.5;     
+  max-height: calc(1.5em * 3); 
 }
 
 

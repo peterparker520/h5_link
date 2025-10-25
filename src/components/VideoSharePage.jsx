@@ -9,7 +9,7 @@ const VideoSharePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const videoRef = useRef(null)
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false)
+  const repaintTimerRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
   // Get data from route state
@@ -49,8 +49,31 @@ const VideoSharePage = () => {
 
       // 强制重绘
       video.style.display = 'none'
-      video.offsetHeight // 触发重排
+      // 触发重排
+      // eslint-disable-next-line no-unused-expressions
+      video.offsetHeight
       video.style.display = 'block'
+    }
+  }
+
+  // 开始/停止一个极低开销的重绘保活定时器（仅在 iOS 微信播放时启用）
+  const startRepaintKeepAlive = (video) => {
+    if (repaintTimerRef.current) return
+    repaintTimerRef.current = setInterval(() => {
+      // 通过微小的 transform 抖动保持 GPU 合成层活跃，避免卡在首帧
+      const t = video.style.transform || ''
+      if (!t.includes('translateX(')) {
+        video.style.transform = `${t} translateX(0.001px)`
+      } else {
+        video.style.transform = t.replace(/translateX\([^)]*\)/, 'translateX(0px)')
+      }
+    }, 250)
+  }
+
+  const stopRepaintKeepAlive = () => {
+    if (repaintTimerRef.current) {
+      clearInterval(repaintTimerRef.current)
+      repaintTimerRef.current = null
     }
   }
 
@@ -66,7 +89,10 @@ const VideoSharePage = () => {
         video.setAttribute('x5-playsinline', 'true')
         video.setAttribute('x5-video-player-type', 'h5-page')
         video.setAttribute('x5-video-player-fullscreen', 'false')
-        video.setAttribute('x5-video-orientation', 'portraint')
+        // 修正写法：portrait（原来拼写错误会被忽略）
+        video.setAttribute('x5-video-orientation', 'portrait')
+        // 在 iOS 微信上尽量让内核完整加载，避免只加载首帧
+        video.preload = 'auto'
 
         // 激活GPU渲染
         activateGPURendering(video)
@@ -75,12 +101,14 @@ const VideoSharePage = () => {
         setTimeout(() => {
           activateGPURendering(video)
         }, 100)
+      } else {
+        // 其他环境按原策略
+        video.preload = 'metadata'
       }
 
       // 视频数据加载完成事件
       const handleLoadedData = () => {
         setIsVideoLoaded(true)
-
 
         // 数据加载完成后再次激活GPU渲染
         if (isIOSWeChat()) {
@@ -92,34 +120,43 @@ const VideoSharePage = () => {
       const handlePlay = () => {
         setIsPlaying(true)
 
-
-        // 播放开始时激活GPU渲染
+        // iOS 微信相关优化
         if (isIOSWeChat()) {
+          // 移除 poster，避免某些内核继续显示首帧图
+          video.removeAttribute('poster')
+
           activateGPURendering(video)
 
           // 强制刷新视频帧
           const forceRefresh = () => {
-            const currentTime = video.currentTime
-            video.currentTime = currentTime + 0.001
-            video.currentTime = currentTime
+            try {
+              const currentTime = video.currentTime
+              video.currentTime = currentTime + 0.001
+              video.currentTime = currentTime
+            } catch (e) {
+              // 忽略可能的 DOM 异常
+            }
           }
 
           // 延迟刷新，确保视频帧正常显示
           setTimeout(forceRefresh, 50)
           setTimeout(forceRefresh, 200)
+
+          // 开启保活定时器，维持 GPU 渲染
+          startRepaintKeepAlive(video)
         }
       }
 
       // 视频暂停事件
       const handlePause = () => {
         setIsPlaying(false)
-
+        stopRepaintKeepAlive()
       }
 
       // 视频结束事件
       const handleEnded = () => {
         setIsPlaying(false)
-
+        stopRepaintKeepAlive()
       }
 
       // 视频加载错误事件
@@ -144,11 +181,9 @@ const VideoSharePage = () => {
       video.addEventListener('error', handleError)
       video.addEventListener('timeupdate', handleTimeUpdate)
 
-      // 设置视频预加载策略
-      video.preload = 'metadata' // 只预加载元数据，节省带宽
-
       // 清理函数：组件卸载时移除事件监听器
       return () => {
+        stopRepaintKeepAlive()
         video.removeEventListener('loadeddata', handleLoadedData)
         video.removeEventListener('play', handlePlay)
         video.removeEventListener('pause', handlePause)
@@ -196,7 +231,7 @@ const VideoSharePage = () => {
           </div>
           <div className="user-details">
             <div className="username">
-              <span>{profile.nickname}</span>
+              <span>{profile.nickname} </span>
               <span>
                 {profile.gender === 1 && <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M11.792 0.208079C11.6544 0.0704167 11.4664 -0.0046717 11.2721 0.000225368H6.90569C6.50376 0.000225368 6.17798 0.326153 6.17798 0.728257C6.17798 1.13036 6.50376 1.45629 6.90569 1.45629H9.50467L6.96642 3.99569C5.24379 2.76761 2.83716 2.9265 1.29183 4.47252C-0.430611 6.19575 -0.430611 8.9898 1.29183 10.713C3.01736 12.429 5.80398 12.429 7.52951 10.713C9.07483 9.167 9.23346 6.75927 8.00594 5.03587L10.5444 2.49628V5.09644C10.534 5.29196 10.6102 5.48204 10.7523 5.61644C10.8776 5.77151 11.0745 5.85041 11.2721 5.82448C11.4666 5.82937 11.6544 5.75428 11.792 5.61662C11.9296 5.47896 12.0047 5.29106 11.9998 5.09644V0.728075C12.0047 0.533643 11.9296 0.34556 11.792 0.208079ZM6.4898 9.67285C5.34151 10.8217 3.47965 10.8217 2.33135 9.67285C1.18306 8.52403 1.18306 6.66133 2.33135 5.51251C3.46515 4.37821 5.29437 4.36388 6.44575 5.46953C6.46062 5.48368 6.4753 5.498 6.4898 5.51251C7.63321 6.66351 7.63321 8.52204 6.4898 9.67285Z" fill="#1DBAFF" />
@@ -230,17 +265,14 @@ const VideoSharePage = () => {
           <video
             ref={videoRef}
             className="video-player"
+            src={video.video_url}
             poster={video.cover_url}
             controls
-            preload="metadata"
-            playsInline={true}
-            webkitplaysinline="true"
-            x5-playsinline="true"
-            x5-video-player-type="h5-page"
-            x5-video-player-fullscreen="false"
-            x5-video-orientation="portraint"
+            // iOS 微信更稳定的内联播放写法
+            playsInline
             muted={false}
             autoPlay={false}
+            // 其余定制属性通过 setAttribute 在 iOS 微信环境下设置
             style={{
               transform: 'translateZ(0)',
               WebkitTransform: 'translateZ(0)',
@@ -249,7 +281,6 @@ const VideoSharePage = () => {
               backfaceVisibility: 'hidden'
             }}
           >
-            <source src={video.video_url} type="video/mp4" />
             您的浏览器不支持视频播放
           </video>
         </div>
@@ -284,7 +315,7 @@ const VideoSharePage = () => {
                   <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5.75 13.0872V3.38338C5.75 2.9821 5.75 2.78146 5.823 2.61873C5.88735 2.47528 5.99097 2.35296 6.12189 2.2659C6.2704 2.16714 6.46831 2.13416 6.86413 2.06819L14.1975 0.845964C14.7316 0.756941 14.9987 0.712429 15.2068 0.789738C15.3895 0.85758 15.5426 0.987279 15.6395 1.15629C15.75 1.34889 15.75 1.61965 15.75 2.16116V11.4205M5.75 13.0872C5.75 14.4679 4.63071 15.5872 3.25 15.5872C1.86929 15.5872 0.75 14.4679 0.75 13.0872C0.75 11.7065 1.86929 10.5872 3.25 10.5872C4.63071 10.5872 5.75 11.7065 5.75 13.0872ZM15.75 11.4205C15.75 12.8013 14.6307 13.9205 13.25 13.9205C11.8693 13.9205 10.75 12.8013 10.75 11.4205C10.75 10.0398 11.8693 8.92054 13.25 8.92054C14.6307 8.92054 15.75 10.0398 15.75 11.4205Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  {video?.resource?.bg_music_list?.title?.length > 0
+                  {video?.resource?.bg_music_list?.[0]?.title
                     ? <span className="audio-text">{video.resource.bg_music_list[0].title}</span>
                     : <span>--</span>
                   }
@@ -347,7 +378,7 @@ const VideoSharePage = () => {
 
         {/* 评论区 */}
         <div className="comments-section">
-          <h3 className="comments-title">精彩评论 ({comment_count})</h3>
+          <h3 className="comments-title">精彩评论 <span style={{color:"#737373"}}>({comment_count})</span></h3>
 
           {comment_count === 0 ? (
             <div className="no-comments">

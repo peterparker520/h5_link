@@ -9,7 +9,8 @@ export default defineConfig({
       '/api': {
         target: 'https://sgp-test.xinpianchang.com',
         changeOrigin: true,
-
+        secure: true,
+        rewrite: (path) => path
       }
     }
   }
