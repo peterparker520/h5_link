@@ -89,7 +89,7 @@ export const fetchVideoData = async (videoId) => {
       fetchVideoComments(videoId)
     ]);
 
-    const template_id=videoDetails.data.video_info.video.template.id;
+    const template_id=videoDetails?.data?.video_info?.video?.template?.id;
     const categoryNames = await Promise.all([
       fetchTemplateCategory(template_id)
     ]);

@@ -23,8 +23,7 @@ function App() {
 
       try {
         const { videoDetails, videoComments, categoryNames } = await fetchVideoData(videoId);
-
-        if (videoDetails.code !== 200 || videoComments.code !== 200) {
+        if (videoDetails.code === 2004 || videoDetails.code === 4501) {
           // setError('The content has been deleted.');
           navigate('/blank', { replace: true });
           return;

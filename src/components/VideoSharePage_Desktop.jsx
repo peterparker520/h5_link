@@ -27,7 +27,7 @@ const VideoSharePage_Desktop = () => {
     const comment_time_1 = formatTime(comment_list[0]?.comment_time);
     const comment_time_2 = formatTime(comment_list[1]?.comment_time);
     const comment_time_3 = formatTime(comment_list[2]?.comment_time);
-    const {category_names}=categoryNames;
+    const {category_names}=categoryNames || '';
 
 
     // 检测是否为iOS微信环境
@@ -270,11 +270,11 @@ const VideoSharePage_Desktop = () => {
 
                         {/* 分类标签 */}
                         <div className="tags">
-                            {category_names[0]&&<span className="tag">#{category_names[0]}</span>}
-                            {category_names[1]&&<span className="tag">#{category_names[1]}</span>}
-                            {category_names[2]&&<span className="tag">#{category_names[2]}</span>}
-                            {category_names[3]&&<span className="tag">#{category_names[3]}</span>}
-                            {category_names[4]&&<span className="tag">#{category_names[4]}</span>}
+                            {category_names?.[0]&&<span className="tag">#{category_names[0]}</span>}
+                            {category_names?.[1]&&<span className="tag">#{category_names[1]}</span>}
+                            {category_names?.[2]&&<span className="tag">#{category_names[2]}</span>}
+                            {category_names?.[3]&&<span className="tag">#{category_names[3]}</span>}
+                            {category_names?.[4]&&<span className="tag">#{category_names[4]}</span>}
                         </div>
 
                         {/* 视频标题 */}
