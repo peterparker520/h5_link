@@ -1,5 +1,5 @@
 import './DownloadPage.css'
-import backgroundImage from '../img/background.jpeg'
+import backgroundImage from '../img/image.png'
 
 const DownloadPage = () => {
   return (

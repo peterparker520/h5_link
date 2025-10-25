@@ -1,72 +1,164 @@
-
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useRef, useEffect, useState } from 'react';
-import './VideoSharePage_Desktop.css'; // We will create this CSS file next
-import test_landscap_video from '../img/test_landscap.mp4';
-import test_portrait_video from '../img/test_portrait.mp4';
-import cover_landscap from '../img/cover_landscap.jpg';
-import cover_portrait from '../img/cover_portrait.jpg';
-import qr_code from '../img/qr_code.png'; // Assuming you have a QR code image
+import './VideoSharePage_Desktop.css';
+import { formatTime } from '../utils/timeFormatter';
+import qr_code from '../img/qr_code.png';
 
 const VideoSharePage_Desktop = () => {
+    const navigate = useNavigate()
+    const location = useLocation()
     const videoRef = useRef(null);
     const [isVideoLoaded, setIsVideoLoaded] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
 
+    // Get data from route state
+    const { videoDetails, videoComments, categoryNames } = location.state || {}
+
+    
+    if (!videoDetails || !videoComments) {
+        return <div>No video data available</div>
+    }
+    const { video_info, user_info } = videoDetails
+    const { video } = video_info
+    const { profile } = user_info
+    const { comment_list, comment_count } = videoComments
+    const create_time = formatTime(video.create_time);
+    const comment_time_1 = formatTime(comment_list[0]?.comment_time);
+    const comment_time_2 = formatTime(comment_list[1]?.comment_time);
+    const comment_time_3 = formatTime(comment_list[2]?.comment_time);
+    const {category_names}=categoryNames;
+
+
+    // 检测是否为iOS微信环境
+    const isIOSWeChat = () => {
+        const ua = navigator.userAgent.toLowerCase()
+        return ua.includes('micromessenger') && (ua.includes('iphone') || ua.includes('ipad'))
+    }
+
+    // 强制激活GPU渲染层
+    const activateGPURendering = (video) => {
+        if (isIOSWeChat()) {
+            // 多种方式激活GPU渲染 - 使用正确的camelCase属性名
+            video.style.transform = 'translateZ(0)'
+            video.style.WebkitTransform = 'translateZ(0)'
+            video.style.willChange = 'transform'
+            video.style.WebkitBackfaceVisibility = 'hidden'
+            video.style.backfaceVisibility = 'hidden'
+            video.style.WebkitPerspective = '1000px'
+            video.style.perspective = '1000px'
+
+            // 强制重绘
+            video.style.display = 'none'
+            video.offsetHeight // 触发重排
+            video.style.display = 'block'
+        }
+    }
+
     // 使用 useEffect 来管理视频元素的生命周期
     useEffect(() => {
-        const video = videoRef.current;
+        const video = videoRef.current
         if (video) {
+            // iOS微信特殊处理
+            if (isIOSWeChat()) {
+                // 设置iOS微信专用属性
+                video.setAttribute('webkit-playsinline', 'true')
+                video.setAttribute('playsinline', 'true')
+                video.setAttribute('x5-playsinline', 'true')
+                video.setAttribute('x5-video-player-type', 'h5-page')
+                video.setAttribute('x5-video-player-fullscreen', 'false')
+                video.setAttribute('x5-video-orientation', 'portraint')
+
+                // 激活GPU渲染
+                activateGPURendering(video)
+
+                // 延迟再次激活GPU渲染，确保生效
+                setTimeout(() => {
+                    activateGPURendering(video)
+                }, 100)
+            }
+
             // 视频数据加载完成事件
             const handleLoadedData = () => {
-                setIsVideoLoaded(true);
-                console.log('视频数据已加载');
-            };
+                setIsVideoLoaded(true)
+
+
+                // 数据加载完成后再次激活GPU渲染
+                if (isIOSWeChat()) {
+                    activateGPURendering(video)
+                }
+            }
 
             // 视频开始播放事件
             const handlePlay = () => {
-                setIsPlaying(true);
-                console.log('视频开始播放');
-            };
+                setIsPlaying(true)
+
+
+                // 播放开始时激活GPU渲染
+                if (isIOSWeChat()) {
+                    activateGPURendering(video)
+
+                    // 强制刷新视频帧
+                    const forceRefresh = () => {
+                        const currentTime = video.currentTime
+                        video.currentTime = currentTime + 0.001
+                        video.currentTime = currentTime
+                    }
+
+                    // 延迟刷新，确保视频帧正常显示
+                    setTimeout(forceRefresh, 50)
+                    setTimeout(forceRefresh, 200)
+                }
+            }
 
             // 视频暂停事件
             const handlePause = () => {
-                setIsPlaying(false);
-                console.log('视频暂停');
-            };
+                setIsPlaying(false)
+
+            }
 
             // 视频结束事件
             const handleEnded = () => {
-                setIsPlaying(false);
-                console.log('视频播放结束');
-            };
+                setIsPlaying(false)
+
+            }
 
             // 视频加载错误事件
             const handleError = (e) => {
-                console.error('视频加载错误:', e);
-                setIsVideoLoaded(false);
-            };
+                console.error('视频加载错误:', e)
+                setIsVideoLoaded(false)
+            }
+
+            // 视频时间更新事件 - 用于iOS微信GPU渲染保持
+            const handleTimeUpdate = () => {
+                if (isIOSWeChat() && isPlaying) {
+                    // 定期激活GPU渲染，防止视频帧冻结
+                    activateGPURendering(video)
+                }
+            }
 
             // 添加事件监听器
-            video.addEventListener('loadeddata', handleLoadedData);
-            video.addEventListener('play', handlePlay);
-            video.addEventListener('pause', handlePause);
-            video.addEventListener('ended', handleEnded);
-            video.addEventListener('error', handleError);
+            video.addEventListener('loadeddata', handleLoadedData)
+            video.addEventListener('play', handlePlay)
+            video.addEventListener('pause', handlePause)
+            video.addEventListener('ended', handleEnded)
+            video.addEventListener('error', handleError)
+            video.addEventListener('timeupdate', handleTimeUpdate)
 
             // 设置视频预加载策略
-            video.preload = 'metadata'; // 只预加载元数据，节省带宽
+            video.preload = 'metadata' // 只预加载元数据，节省带宽
 
             // 清理函数：组件卸载时移除事件监听器
             return () => {
-                video.removeEventListener('loadeddata', handleLoadedData);
-                video.removeEventListener('play', handlePlay);
-                video.removeEventListener('pause', handlePause);
-                video.removeEventListener('ended', handleEnded);
-                video.removeEventListener('error', handleError);
-            };
+                video.removeEventListener('loadeddata', handleLoadedData)
+                video.removeEventListener('play', handlePlay)
+                video.removeEventListener('pause', handlePause)
+                video.removeEventListener('ended', handleEnded)
+                video.removeEventListener('error', handleError)
+                video.removeEventListener('timeupdate', handleTimeUpdate)
+            }
         }
-    }, []); // 空依赖数组确保只在组件挂载时运行一次
+    }, [isPlaying]) // 依赖isPlaying状态
 
     // 点击非视频区域显示二维码模态窗
     const handlePageClick = () => {
@@ -86,10 +178,9 @@ const VideoSharePage_Desktop = () => {
     const handleVideoAreaClick = (e) => {
         e.stopPropagation();
     };
-
     return (
         <div className="desktop-page-container" onClick={handlePageClick}>
-            {/* Top Banner */}
+            {/* 顶部Banner */}
             <div className="desktop-header">
                 <div className="header-content">
                     <div className="brand-info">
@@ -109,150 +200,232 @@ const VideoSharePage_Desktop = () => {
             </div>
 
             <div className="desktop-main-layout">
-                {/* Left Column (2/3) */}
+                {/* 左列 (2/3) */}
                 <div className="left-column">
                     <div className="video-content-wrapper">
-                        {/* User Info */}
+                        {/* 用户信息 */}
                         <div className="user-info">
                             <div className="user-avatar">
-                                <img src={cover_landscap} alt="人淡如菊" />
+                                <img src={profile.avatar} alt={profile.nickname} />
                             </div>
                             <div className="user-details">
                                 <div className="username">
-                                    <span>人淡如菊</span>
+                                    <span>{profile.nickname} </span>
+                                    <span>
+                                        {profile.gender === 1 && <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M11.792 0.208079C11.6544 0.0704167 11.4664 -0.0046717 11.2721 0.000225368H6.90569C6.50376 0.000225368 6.17798 0.326153 6.17798 0.728257C6.17798 1.13036 6.50376 1.45629 6.90569 1.45629H9.50467L6.96642 3.99569C5.24379 2.76761 2.83716 2.9265 1.29183 4.47252C-0.430611 6.19575 -0.430611 8.9898 1.29183 10.713C3.01736 12.429 5.80398 12.429 7.52951 10.713C9.07483 9.167 9.23346 6.75927 8.00594 5.03587L10.5444 2.49628V5.09644C10.534 5.29196 10.6102 5.48204 10.7523 5.61644C10.8776 5.77151 11.0745 5.85041 11.2721 5.82448C11.4666 5.82937 11.6544 5.75428 11.792 5.61662C11.9296 5.47896 12.0047 5.29106 11.9998 5.09644V0.728075C12.0047 0.533643 11.9296 0.34556 11.792 0.208079ZM6.4898 9.67285C5.34151 10.8217 3.47965 10.8217 2.33135 9.67285C1.18306 8.52403 1.18306 6.66133 2.33135 5.51251C3.46515 4.37821 5.29437 4.36388 6.44575 5.46953C6.46062 5.48368 6.4753 5.498 6.4898 5.51251C7.63321 6.66351 7.63321 8.52204 6.4898 9.67285Z" fill="#1DBAFF" />
+                                        </svg>}
+                                        {profile.gender === 2 && <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g clipPath="url(#clip0_60131_6506)">
+                                                <path d="M10.05 0.952429C8.28186 -0.494116 5.691 -0.26463 4.20254 1.44847L4.04146 1.64539C2.80224 3.25526 2.90356 5.49557 4.20704 6.98524L3.72521 7.57411L1.55106 5.7952C1.26424 5.56052 0.847703 5.59066 0.596913 5.85548L0.53179 5.93515C0.321875 6.23339 0.374874 6.64768 0.661689 6.88219L2.83584 8.66093L1.0571 10.8354C0.92824 10.9748 0.865196 11.1629 0.884074 11.3519C0.902953 11.5409 1.00202 11.7127 1.15582 11.8237C1.29525 11.9525 1.48316 12.0156 1.6723 11.9967C1.86125 11.9778 2.03307 11.8788 2.14426 11.7248L3.923 9.55064L6.09715 11.3294C6.3973 11.575 6.83982 11.5308 7.08541 11.2307C7.331 10.9305 7.28684 10.488 6.98651 10.2424L4.81237 8.46366L5.29541 7.87323C7.05008 8.87067 9.3181 8.49206 10.6432 6.88219C12.1168 5.08094 11.8513 2.42617 10.05 0.952429ZM9.55607 5.99265C8.5737 7.19343 6.80379 7.37043 5.60301 6.38806C4.40224 5.40568 4.22523 3.63578 5.2076 2.435C6.18998 1.23422 7.95988 1.05721 9.16066 2.03959C10.3569 3.02456 10.5334 4.79048 9.55607 5.99265Z" fill="#FF4067" />
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_60131_6506">
+                                                    <rect width="12" height="12" fill="white" />
+                                                </clipPath>
+                                            </defs>
+                                        </svg>}
+                                    </span>
                                 </div>
                                 <div className="user-meta">
-                                    <span className="location">北京·海淀区</span>
+                                    <span className="location">{video.location.province}</span>
                                     <span> </span>
-                                    <span className="time">1周前</span>
+                                    <span className="time">{create_time}</span>
                                 </div>
                             </div>
                             <button className="follow-btn">关注</button>
                         </div>
 
-                        {/* Video Player */}
-                        <div className="video-container landscape" onClick={handleVideoAreaClick}>
+                        {/* 视频播放 */}
+                        <div
+                            className={`video-container ${"landscape"}`}
+                            onClick={handleVideoAreaClick}
+                        >
                             <video
                                 ref={videoRef}
                                 className="video-player"
-                                poster={cover_landscap}
+                                poster={video.cover_url}
                                 controls
                                 preload="metadata"
-                                playsInline
-                                webkit-playsinline="true"
+                                playsInline={true}
+                                webkitplaysinline="true"
                                 x5-playsinline="true"
-                                x5-video-player-type="h5"
-                                x5-video-player-fullscreen="true"
+                                x5-video-player-type="h5-page"
+                                x5-video-player-fullscreen="false"
+                                x5-video-orientation="portraint"
+                                muted={false}
+                                autoPlay={false}
+                                style={{
+                                    transform: 'translateZ(0)',
+                                    WebkitTransform: 'translateZ(0)',
+                                    willChange: 'transform',
+                                    WebkitBackfaceVisibility: 'hidden',
+                                    backfaceVisibility: 'hidden'
+                                }}
                             >
-                                <source src={test_portrait_video} type="video/mp4" />
+                                <source src={video.video_url} type="video/mp4" />
                                 您的浏览器不支持视频播放
                             </video>
                         </div>
 
-                        {/* Tags, Title, Description etc. will go here */}
+                        {/* 分类标签 */}
                         <div className="tags">
-                            <span className="tag">#旅行vlog</span>
-                            <span className="tag">#旅行日常</span>
-                            <span className="tag">#日系旅行</span>
+                            {category_names[0]&&<span className="tag">#{category_names[0]}</span>}
+                            {category_names[1]&&<span className="tag">#{category_names[1]}</span>}
+                            {category_names[2]&&<span className="tag">#{category_names[2]}</span>}
+                            {category_names[3]&&<span className="tag">#{category_names[3]}</span>}
+                            {category_names[4]&&<span className="tag">#{category_names[4]}</span>}
                         </div>
-                        <h2 className="video-title">美丽的新疆7日游</h2>
+
+                        {/* 视频标题 */}
+                        <h2 className="video-title">{video.title}</h2>
+
+                        {/* 视频简介 */}
                         <p className="video-description">
-                            每一次的旅行，都是与世界的温柔邂逅，值得被记录。走进新疆，非常惊艳的旅行地，编辑提醒的星光，分享每一份美好给大家。
+                            {video.content}
                         </p>
 
                         {/* 评论区 */}
                         <div className="comments-section">
-                            <h3 className="comments-title">精彩评论 (123)</h3>
+                            <h3 className="comments-title">精彩评论 ({comment_count})</h3>
 
-                            <div className="comment-item">
-                                <img src={cover_landscap} alt="人淡如菊" className="comment-avatar" />
-                                <div className="comment-content">
-                                    <div className="comment-header">
-                                        <span className="comment-username">人淡如菊</span>
-                                        <span className="comment-badge">作者</span>
-                                        <span className="comment-badge blue">首评</span>
-                                    </div>
-                                    <p className="comment-text">走进你的美，美好的时光记录，拍摄旅途的美光，分享每一份美好给大家。</p>
-                                    <div className="comment-meta">
-                                        <span className="comment-time">12-10 来自北京</span>
-                                        <div className="comment-actions">
-                                            <span className="comment-reply">
-                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M6 8.66667H6.00889M10 8.66667H10.0089M14 8.66667H14.0089M5.55556 15.3333V17.4093C5.55556 17.883 5.55556 18.1198 5.65265 18.2414C5.73709 18.3472 5.86513 18.4088 6.00048 18.4086C6.15611 18.4084 6.34104 18.2605 6.71089 17.9646L8.8313 16.2683C9.26446 15.9218 9.48104 15.7485 9.72221 15.6253C9.93618 15.516 10.1639 15.4361 10.3993 15.3878C10.6646 15.3333 10.942 15.3333 11.4967 15.3333H13.7333C15.2268 15.3333 15.9735 15.3333 16.544 15.0427C17.0457 14.787 17.4537 14.3791 17.7094 13.8773C18 13.3069 18 12.5601 18 11.0667V6.26667C18 4.77319 18 4.02646 17.7094 3.45603C17.4537 2.95426 17.0457 2.54631 16.544 2.29065C15.9735 2 15.2268 2 13.7333 2H6.26667C4.77319 2 4.02646 2 3.45603 2.29065C2.95426 2.54631 2.54631 2.95426 2.29065 3.45603C2 4.02646 2 4.77319 2 6.26667V11.7778C2 12.6044 2 13.0177 2.09086 13.3569C2.33744 14.2771 3.05624 14.9959 3.97648 15.2425C4.31559 15.3333 4.72891 15.3333 5.55556 15.3333ZM6.44444 8.66667C6.44444 8.91213 6.24546 9.11111 6 9.11111C5.75454 9.11111 5.55556 8.91213 5.55556 8.66667C5.55556 8.42121 5.75454 8.22222 6 8.22222C6.24546 8.22222 6.44444 8.42121 6.44444 8.66667ZM10.4444 8.66667C10.4444 8.91213 10.2455 9.11111 10 9.11111C9.75454 9.11111 9.55556 8.91213 9.55556 8.66667C9.55556 8.42121 9.75454 8.22222 10 8.22222C10.2455 8.22222 10.4444 8.42121 10.4444 8.66667ZM14.4444 8.66667C14.4444 8.91213 14.2455 9.11111 14 9.11111C13.7545 9.11111 13.5556 8.91213 13.5556 8.66667C13.5556 8.42121 13.7545 8.22222 14 8.22222C14.2455 8.22222 14.4444 8.42121 14.4444 8.66667Z" stroke="#737373" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                                回复
-                                            </span>
-                                            <span className="comment-like">
-                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.83341 18.3337V9.16699M1.66675 10.8337V16.667C1.66675 17.5875 2.41294 18.3337 3.33341 18.3337H14.522C15.7559 18.3337 16.8053 17.4334 16.9929 16.2138L17.8903 10.3805C18.1233 8.86607 16.9516 7.50033 15.4194 7.50033H12.5001C12.0398 7.50033 11.6667 7.12723 11.6667 6.66699V3.72186C11.6667 2.58699 10.7468 1.66699 9.61188 1.66699C9.3412 1.66699 9.0959 1.8264 8.98596 2.07376L6.05336 8.67211C5.91961 8.97305 5.62118 9.16699 5.29185 9.16699H3.33341C2.41294 9.16699 1.66675 9.91318 1.66675 10.8337Z" stroke="#737373" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                                123
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="show-more-comments">
-                                        <span>全部4条回复▼</span>
-                                    </div>
+                            {comment_count === 0 ? (
+                                <div className="no-comments">
+                                    <svg width="90" height="90" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="24.981" y="63.126" width="7.68434" height="14.088" rx="2" transform="rotate(20.1737 24.981 63.126)" fill="#D9D9D9" />
+                                        <rect width="7.68434" height="14.088" rx="2" transform="matrix(-0.938651 0.344868 0.344868 0.938651 64.915 63.126)" fill="#D9D9D9" />
+                                        <rect x="8" y="31.4824" width="14.3989" height="36.2657" rx="4" transform="rotate(-4.33059 8 31.4824)" fill="url(#paint0_linear_60280_6600)" />
+                                        <rect width="14.3989" height="36.2657" rx="4" transform="matrix(-0.997145 -0.0755112 -0.0755112 0.997145 82.0718 31.4824)" fill="url(#paint1_linear_60280_6600)" />
+                                        <path d="M20.1226 21C20.1226 15.4772 24.5997 11 30.1226 11H59.8243C65.3472 11 69.8243 15.4772 69.8243 21V53.1262C69.8243 58.6491 65.3472 63.1262 59.8243 63.1262H30.1226C24.5997 63.1262 20.1226 58.6491 20.1226 53.1262V21Z" fill="url(#paint2_linear_60280_6600)" />
+                                        <path d="M75.5225 67.9756C77.7316 67.9756 79.5225 66.1847 79.5225 63.9756L79.5225 57.4287C79.5225 55.2196 77.7316 53.4287 75.5225 53.4287L14.4249 53.4287C12.2157 53.4287 10.4249 55.2196 10.4249 57.4287L10.4249 63.9756C10.4249 66.1847 12.2157 67.9756 14.4249 67.9756L75.5225 67.9756Z" fill="url(#paint3_linear_60280_6600)" />
+                                        <rect x="36.5308" y="26.7607" width="1.46391" height="6.06119" rx="0.731957" transform="rotate(45 36.5308 26.7607)" fill="#D9D9D9" />
+                                        <rect x="32.2446" y="27.7949" width="1.46391" height="6.06119" rx="0.731957" transform="rotate(-45 32.2446 27.7949)" fill="#D9D9D9" />
+                                        <rect x="55.9268" y="26.7607" width="1.46391" height="6.06119" rx="0.731957" transform="rotate(45 55.9268 26.7607)" fill="#D9D9D9" />
+                                        <rect x="51.6406" y="27.7949" width="1.46391" height="6.06119" rx="0.731957" transform="rotate(-45 51.6406 27.7949)" fill="#D9D9D9" />
+                                        <defs>
+                                            <linearGradient id="paint0_linear_60280_6600" x1="8" y1="49.3988" x2="21.9732" y2="52.0639" gradientUnits="userSpaceOnUse">
+                                                <stop offset="0.100929" stopColor="#D4D4D4" stopOpacity="0.5" />
+                                                <stop offset="1" stopColor="#D4D4D4" />
+                                            </linearGradient>
+                                            <linearGradient id="paint1_linear_60280_6600" x1="5.74126e-09" y1="18.3493" x2="13.9732" y2="15.6842" gradientUnits="userSpaceOnUse">
+                                                <stop offset="0.100929" stopColor="#D4D4D4" stopOpacity="0.5" />
+                                                <stop offset="1" stopColor="#D4D4D4" />
+                                            </linearGradient>
+                                            <linearGradient id="paint2_linear_60280_6600" x1="44.9734" y1="11" x2="44.9734" y2="63.1262" gradientUnits="userSpaceOnUse">
+                                                <stop stopColor="#EEEEEE" />
+                                                <stop offset="1" stopColor="#F8F8F8" />
+                                            </linearGradient>
+                                            <linearGradient id="paint3_linear_60280_6600" x1="44.6774" y1="67.9756" x2="44.6774" y2="53.4287" gradientUnits="userSpaceOnUse">
+                                                <stop stopColor="#DDDDDD" stopOpacity="0.98" />
+                                                <stop offset="1" stopColor="#F7F7F7" stopOpacity="0.72" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+                                    <p className="no-comments-text">暂无评论，快来抢沙发吧</p>
                                 </div>
-                            </div>
-                            <div className="comment-item">
-                                <img src={cover_landscap} alt="热爱生活" className="comment-avatar" />
-                                <div className="comment-content">
-                                    <div className="comment-header">
-                                        <span className="comment-username">热爱生活</span>
-                                    </div>
-                                    <p className="comment-text">拍的太美了</p>
-                                    <div className="comment-meta">
-                                        <span className="comment-time">3天前 来自北京</span>
-                                        <div className="comment-actions">
-                                            <span className="comment-reply">
-                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M6 8.66667H6.00889M10 8.66667H10.0089M14 8.66667H14.0089M5.55556 15.3333V17.4093C5.55556 17.883 5.55556 18.1198 5.65265 18.2414C5.73709 18.3472 5.86513 18.4088 6.00048 18.4086C6.15611 18.4084 6.34104 18.2605 6.71089 17.9646L8.8313 16.2683C9.26446 15.9218 9.48104 15.7485 9.72221 15.6253C9.93618 15.516 10.1639 15.4361 10.3993 15.3878C10.6646 15.3333 10.942 15.3333 11.4967 15.3333H13.7333C15.2268 15.3333 15.9735 15.3333 16.544 15.0427C17.0457 14.787 17.4537 14.3791 17.7094 13.8773C18 13.3069 18 12.5601 18 11.0667V6.26667C18 4.77319 18 4.02646 17.7094 3.45603C17.4537 2.95426 17.0457 2.54631 16.544 2.29065C15.9735 2 15.2268 2 13.7333 2H6.26667C4.77319 2 4.02646 2 3.45603 2.29065C2.95426 2.54631 2.54631 2.95426 2.29065 3.45603C2 4.02646 2 4.77319 2 6.26667V11.7778C2 12.6044 2 13.0177 2.09086 13.3569C2.33744 14.2771 3.05624 14.9959 3.97648 15.2425C4.31559 15.3333 4.72891 15.3333 5.55556 15.3333ZM6.44444 8.66667C6.44444 8.91213 6.24546 9.11111 6 9.11111C5.75454 9.11111 5.55556 8.91213 5.55556 8.66667C5.55556 8.42121 5.75454 8.22222 6 8.22222C6.24546 8.22222 6.44444 8.42121 6.44444 8.66667ZM10.4444 8.66667C10.4444 8.91213 10.2455 9.11111 10 9.11111C9.75454 9.11111 9.55556 8.91213 9.55556 8.66667C9.55556 8.42121 9.75454 8.22222 10 8.22222C10.2455 8.22222 10.4444 8.42121 10.4444 8.66667ZM14.4444 8.66667C14.4444 8.91213 14.2455 9.11111 14 9.11111C13.7545 9.11111 13.5556 8.91213 13.5556 8.66667C13.5556 8.42121 13.7545 8.22222 14 8.22222C14.2455 8.22222 14.4444 8.42121 14.4444 8.66667Z" stroke="#737373" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                                回复
-                                            </span>
-                                            <span className="comment-like">
-                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.83341 18.3337V9.16699M1.66675 10.8337V16.667C1.66675 17.5875 2.41294 18.3337 3.33341 18.3337H14.522C15.7559 18.3337 16.8053 17.4334 16.9929 16.2138L17.8903 10.3805C18.1233 8.86607 16.9516 7.50033 15.4194 7.50033H12.5001C12.0398 7.50033 11.6667 7.12723 11.6667 6.66699V3.72186C11.6667 2.58699 10.7468 1.66699 9.61188 1.66699C9.3412 1.66699 9.0959 1.8264 8.98596 2.07376L6.05336 8.67211C5.91961 8.97305 5.62118 9.16699 5.29185 9.16699H3.33341C2.41294 9.16699 1.66675 9.91318 1.66675 10.8337Z" stroke="#737373" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                                3
-                                            </span>
+                            ) : (
+                                <div>
+                                    {comment_list[0] && <div className="comment-item">
+                                        <img src={comment_list[0].user_info.avatar} alt={comment_list[0].user_info.nickname} className="comment-avatar" />
+                                        <div className="comment-content">
+                                            <div className="comment-header">
+                                                <span className="comment-username">{comment_list[0].user_info.nickname}</span>
+                                                {comment_list[0].is_author && <span className="comment-badge">作者</span>}
+                                                {comment_list[0].is_first_comment && <span className="comment-badge blue">首评</span>}
+                                            </div>
+                                            <p className="comment-text">{comment_list[0].content}</p>
+                                            <div className="comment-meta">
+                                                <span className="comment-time">{comment_time_1} {comment_list[0].location}</span>
+                                                <div className="comment-actions">
+                                                    <span className="comment-reply">
+                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M6 8.66667H6.00889M10 8.66667H10.0089M14 8.66667H14.0089M5.55556 15.3333V17.4093C5.55556 17.883 5.55556 18.1198 5.65265 18.2414C5.73709 18.3472 5.86513 18.4088 6.00048 18.4086C6.15611 18.4084 6.34104 18.2605 6.71089 17.9646L8.8313 16.2683C9.26446 15.9218 9.48104 15.7485 9.72221 15.6253C9.93618 15.516 10.1639 15.4361 10.3993 15.3878C10.6646 15.3333 10.942 15.3333 11.4967 15.3333H13.7333C15.2268 15.3333 15.9735 15.3333 16.544 15.0427C17.0457 14.787 17.4537 14.3791 17.7094 13.8773C18 13.3069 18 12.5601 18 11.0667V6.26667C18 4.77319 18 4.02646 17.7094 3.45603C17.4537 2.95426 17.0457 2.54631 16.544 2.29065C15.9735 2 15.2268 2 13.7333 2H6.26667C4.77319 2 4.02646 2 3.45603 2.29065C2.95426 2.54631 2.54631 2.95426 2.29065 3.45603C2 4.02646 2 4.77319 2 6.26667V11.7778C2 12.6044 2 13.0177 2.09086 13.3569C2.33744 14.2771 3.05624 14.9959 3.97648 15.2425C4.31559 15.3333 4.72891 15.3333 5.55556 15.3333ZM6.44444 8.66667C6.44444 8.91213 6.24546 9.11111 6 9.11111C5.75454 9.11111 5.55556 8.91213 5.55556 8.66667C5.55556 8.42121 5.75454 8.22222 6 8.22222C6.24546 8.22222 6.44444 8.42121 6.44444 8.66667ZM10.4444 8.66667C10.4444 8.91213 10.2455 9.11111 10 9.11111C9.75454 9.11111 9.55556 8.91213 9.55556 8.66667C9.55556 8.42121 9.75454 8.22222 10 8.22222C10.2455 8.22222 10.4444 8.42121 10.4444 8.66667ZM14.4444 8.66667C14.4444 8.91213 14.2455 9.11111 14 9.11111C13.7545 9.11111 13.5556 8.91213 13.5556 8.66667C13.5556 8.42121 13.7545 8.22222 14 8.22222C14.2455 8.22222 14.4444 8.42121 14.4444 8.66667Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                        回复
+                                                    </span>
+                                                    <span className="comment-like">
+                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M5.83341 18.3337V9.16699M1.66675 10.8337V16.667C1.66675 17.5875 2.41294 18.3337 3.33341 18.3337H14.522C15.7559 18.3337 16.8053 17.4334 16.9929 16.2138L17.8903 10.3805C18.1233 8.86607 16.9516 7.50033 15.4194 7.50033H12.5001C12.0398 7.50033 11.6667 7.12723 11.6667 6.66699V3.72186C11.6667 2.58699 10.7468 1.66699 9.61188 1.66699C9.3412 1.66699 9.0959 1.8264 8.98596 2.07376L6.05336 8.67211C5.91961 8.97305 5.62118 9.16699 5.29185 9.16699H3.33341C2.41294 9.16699 1.66675 9.91318 1.66675 10.8337Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                        {comment_list[0].like_count}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="show-more-comments">
+                                                <span>全部{comment_list[0].reply_count}条回复▼</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
+                                    </div>}
+                                    <div className="container">
+                                        {comment_list[1] && <div className="comment-item">
+                                            <img src={comment_list[1].user_info.avatar} alt={comment_list[1].user_info.nickname} className="comment-avatar" />
+                                            <div className="comment-content">
+                                                <div className="comment-header">
+                                                    <span className="comment-username">{comment_list[1].user_info.nickname}</span>
+                                                    {comment_list[1].is_author && <span className="comment-badge">作者</span>}
+                                                    {comment_list[1].is_first_comment && <span className="comment-badge blue">首评</span>}
+                                                </div>
+                                                <p className="comment-text">{comment_list[1].content}</p>
+                                                <div className="comment-meta">
+                                                    <span className="comment-time">{comment_time_2} {comment_list[1].location}</span>
+                                                    <div className="comment-actions">
+                                                        <span className="comment-reply">
+                                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M6 8.66667H6.00889M10 8.66667H10.0089M14 8.66667H14.0089M5.55556 15.3333V17.4093C5.55556 17.883 5.55556 18.1198 5.65265 18.2414C5.73709 18.3472 5.86513 18.4088 6.00048 18.4086C6.15611 18.4084 6.34104 18.2605 6.71089 17.9646L8.8313 16.2683C9.26446 15.9218 9.48104 15.7485 9.72221 15.6253C9.93618 15.516 10.1639 15.4361 10.3993 15.3878C10.6646 15.3333 10.942 15.3333 11.4967 15.3333H13.7333C15.2268 15.3333 15.9735 15.3333 16.544 15.0427C17.0457 14.787 17.4537 14.3791 17.7094 13.8773C18 13.3069 18 12.5601 18 11.0667V6.26667C18 4.77319 18 4.02646 17.7094 3.45603C17.4537 2.95426 17.0457 2.54631 16.544 2.29065C15.9735 2 15.2268 2 13.7333 2H6.26667C4.77319 2 4.02646 2 3.45603 2.29065C2.95426 2.54631 2.54631 2.95426 2.29065 3.45603C2 4.02646 2 4.77319 2 6.26667V11.7778C2 12.6044 2 13.0177 2.09086 13.3569C2.33744 14.2771 3.05624 14.9959 3.97648 15.2425C4.31559 15.3333 4.72891 15.3333 5.55556 15.3333ZM6.44444 8.66667C6.44444 8.91213 6.24546 9.11111 6 9.11111C5.75454 9.11111 5.55556 8.91213 5.55556 8.66667C5.55556 8.42121 5.75454 8.22222 6 8.22222C6.24546 8.22222 6.44444 8.42121 6.44444 8.66667ZM10.4444 8.66667C10.4444 8.91213 10.2455 9.11111 10 9.11111C9.75454 9.11111 9.55556 8.91213 9.55556 8.66667C9.55556 8.42121 9.75454 8.22222 10 8.22222C10.2455 8.22222 10.4444 8.42121 10.4444 8.66667ZM14.4444 8.66667C14.4444 8.91213 14.2455 9.11111 14 9.11111C13.7545 9.11111 13.5556 8.91213 13.5556 8.66667C13.5556 8.42121 13.7545 8.22222 14 8.22222C14.2455 8.22222 14.4444 8.42121 14.4444 8.66667Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                            回复
+                                                        </span>
+                                                        <span className="comment-like">
+                                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M5.83341 18.3337V9.16699M1.66675 10.8337V16.667C1.66675 17.5875 2.41294 18.3337 3.33341 18.3337H14.522C15.7559 18.3337 16.8053 17.4334 16.9929 16.2138L17.8903 10.3805C18.1233 8.86607 16.9516 7.50033 15.4194 7.50033H12.5001C12.0398 7.50033 11.6667 7.12723 11.6667 6.66699V3.72186C11.6667 2.58699 10.7468 1.66699 9.61188 1.66699C9.3412 1.66699 9.0959 1.8264 8.98596 2.07376L6.05336 8.67211C5.91961 8.97305 5.62118 9.16699 5.29185 9.16699H3.33341C2.41294 9.16699 1.66675 9.91318 1.66675 10.8337Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                            {comment_list[1].like_count}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {comment_list[1].reply_count && <div className="show-more-comments">
+                                                    <span>全部{comment_list[1].reply_count}条回复▼</span>
+                                                </div>}
+                                            </div>
+                                        </div>}
 
-                            <div className="comment-item">
-                                <img src={cover_landscap} alt="来自北方的张哥" className="comment-avatar" />
-                                <div className="comment-content">
-                                    <div className="comment-header">
-                                        <span className="comment-username">来自北方的张哥</span>
-                                    </div>
-                                    <p className="comment-text">我也去过这里，真的很美～</p>
-                                    <div className="comment-meta">
-                                        <span className="comment-time">3天前 来自北京</span>
-                                        <div className="comment-actions">
-                                            <span className="comment-reply">
-                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M6 8.66667H6.00889M10 8.66667H10.0089M14 8.66667H14.0089M5.55556 15.3333V17.4093C5.55556 17.883 5.55556 18.1198 5.65265 18.2414C5.73709 18.3472 5.86513 18.4088 6.00048 18.4086C6.15611 18.4084 6.34104 18.2605 6.71089 17.9646L8.8313 16.2683C9.26446 15.9218 9.48104 15.7485 9.72221 15.6253C9.93618 15.516 10.1639 15.4361 10.3993 15.3878C10.6646 15.3333 10.942 15.3333 11.4967 15.3333H13.7333C15.2268 15.3333 15.9735 15.3333 16.544 15.0427C17.0457 14.787 17.4537 14.3791 17.7094 13.8773C18 13.3069 18 12.5601 18 11.0667V6.26667C18 4.77319 18 4.02646 17.7094 3.45603C17.4537 2.95426 17.0457 2.54631 16.544 2.29065C15.9735 2 15.2268 2 13.7333 2H6.26667C4.77319 2 4.02646 2 3.45603 2.29065C2.95426 2.54631 2.54631 2.95426 2.29065 3.45603C2 4.02646 2 4.77319 2 6.26667V11.7778C2 12.6044 2 13.0177 2.09086 13.3569C2.33744 14.2771 3.05624 14.9959 3.97648 15.2425C4.31559 15.3333 4.72891 15.3333 5.55556 15.3333ZM6.44444 8.66667C6.44444 8.91213 6.24546 9.11111 6 9.11111C5.75454 9.11111 5.55556 8.91213 5.55556 8.66667C5.55556 8.42121 5.75454 8.22222 6 8.22222C6.24546 8.22222 6.44444 8.42121 6.44444 8.66667ZM10.4444 8.66667C10.4444 8.91213 10.2455 9.11111 10 9.11111C9.75454 9.11111 9.55556 8.91213 9.55556 8.66667C9.55556 8.42121 9.75454 8.22222 10 8.22222C10.2455 8.22222 10.4444 8.42121 10.4444 8.66667ZM14.4444 8.66667C14.4444 8.91213 14.2455 9.11111 14 9.11111C13.7545 9.11111 13.5556 8.91213 13.5556 8.66667C13.5556 8.42121 13.7545 8.22222 14 8.22222C14.2455 8.22222 14.4444 8.42121 14.4444 8.66667Z" stroke="#737373" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                                回复
-                                            </span>
-                                            <span className="comment-like">
-                                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.83341 18.3337V9.16699M1.66675 10.8337V16.667C1.66675 17.5875 2.41294 18.3337 3.33341 18.3337H14.522C15.7559 18.3337 16.8053 17.4334 16.9929 16.2138L17.8903 10.3805C18.1233 8.86607 16.9516 7.50033 15.4194 7.50033H12.5001C12.0398 7.50033 11.6667 7.12723 11.6667 6.66699V3.72186C11.6667 2.58699 10.7468 1.66699 9.61188 1.66699C9.3412 1.66699 9.0959 1.8264 8.98596 2.07376L6.05336 8.67211C5.91961 8.97305 5.62118 9.16699 5.29185 9.16699H3.33341C2.41294 9.16699 1.66675 9.91318 1.66675 10.8337Z" stroke="#737373" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                                123
-                                            </span>
+                                        {comment_list[2] && (<div className="comment-item">
+                                            <img src={comment_list[2].user_info.avatar} alt={comment_list[2].user_info.nickname} className="comment-avatar" />
+                                            <div className="comment-content">
+                                                <div className="comment-header">
+                                                    <span className="comment-username">{comment_list[2].user_info.nickname}</span>
+                                                    {comment_list[2].is_author && <span className="comment-badge">作者</span>}
+                                                    {comment_list[2].is_first_comment && <span className="comment-badge blue">首评</span>}
+                                                </div>
+                                                <p className="comment-text">{comment_list[2].content}</p>
+                                                <div className="comment-meta">
+                                                    <span className="comment-time">{comment_time_3} {comment_list[2].location}</span>
+                                                    <div className="comment-actions">
+                                                        <span className="comment-reply">
+                                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M6 8.66667H6.00889M10 8.66667H10.0089M14 8.66667H14.0089M5.55556 15.3333V17.4093C5.55556 17.883 5.55556 18.1198 5.65265 18.2414C5.73709 18.3472 5.86513 18.4088 6.00048 18.4086C6.15611 18.4084 6.34104 18.2605 6.71089 17.9646L8.8313 16.2683C9.26446 15.9218 9.48104 15.7485 9.72221 15.6253C9.93618 15.516 10.1639 15.4361 10.3993 15.3878C10.6646 15.3333 10.942 15.3333 11.4967 15.3333H13.7333C15.2268 15.3333 15.9735 15.3333 16.544 15.0427C17.0457 14.787 17.4537 14.3791 17.7094 13.8773C18 13.3069 18 12.5601 18 11.0667V6.26667C18 4.77319 18 4.02646 17.7094 3.45603C17.4537 2.95426 17.0457 2.54631 16.544 2.29065C15.9735 2 15.2268 2 13.7333 2H6.26667C4.77319 2 4.02646 2 3.45603 2.29065C2.95426 2.54631 2.54631 2.95426 2.29065 3.45603C2 4.02646 2 4.77319 2 6.26667V11.7778C2 12.6044 2 13.0177 2.09086 13.3569C2.33744 14.2771 3.05624 14.9959 3.97648 15.2425C4.31559 15.3333 4.72891 15.3333 5.55556 15.3333ZM6.44444 8.66667C6.44444 8.91213 6.24546 9.11111 6 9.11111C5.75454 9.11111 5.55556 8.91213 5.55556 8.66667C5.55556 8.42121 5.75454 8.22222 6 8.22222C6.24546 8.22222 6.44444 8.42121 6.44444 8.66667ZM10.4444 8.66667C10.4444 8.91213 10.2455 9.11111 10 9.11111C9.75454 9.11111 9.55556 8.91213 9.55556 8.66667C9.55556 8.42121 9.75454 8.22222 10 8.22222C10.2455 8.22222 10.4444 8.42121 10.4444 8.66667ZM14.4444 8.66667C14.4444 8.91213 14.2455 9.11111 14 9.11111C13.7545 9.11111 13.5556 8.91213 13.5556 8.66667C13.5556 8.42121 13.7545 8.22222 14 8.22222C14.2455 8.22222 14.4444 8.42121 14.4444 8.66667Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                            回复
+                                                        </span>
+                                                        <span className="comment-like">
+                                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M5.83341 18.3337V9.16699M1.66675 10.8337V16.667C1.66675 17.5875 2.41294 18.3337 3.33341 18.3337H14.522C15.7559 18.3337 16.8053 17.4334 16.9929 16.2138L17.8903 10.3805C18.1233 8.86607 16.9516 7.50033 15.4194 7.50033H12.5001C12.0398 7.50033 11.6667 7.12723 11.6667 6.66699V3.72186C11.6667 2.58699 10.7468 1.66699 9.61188 1.66699C9.3412 1.66699 9.0959 1.8264 8.98596 2.07376L6.05336 8.67211C5.91961 8.97305 5.62118 9.16699 5.29185 9.16699H3.33341C2.41294 9.16699 1.66675 9.91318 1.66675 10.8337Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                            {comment_list[2].like_count}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Right Column (1/3) */}
+                {/* 右列 (1/3) */}
                 <div className="right-column">
                     <div className="promo-section">
                         <img src={qr_code} alt="Download App QR Code" className="qr-code-img" />
@@ -263,11 +436,11 @@ const VideoSharePage_Desktop = () => {
 
                     {/* 推广卡片 */}
                     <div className="promo-card">
-                        <img src={cover_portrait} alt="旅行美食模板24镜头" className="promo-image" />
+                        <img src={video.template.cover_url} alt={video.template.name} className="promo-image" />
                         <div className="promo-content">
                             <div className="promo-text-content">
                                 <div className="promo-header">
-                                    <h3>旅行唯美模板24镜头</h3>
+                                    <h3>{video.template.name}</h3>
                                     <button className="use-template-btn">创作同款</button>
                                 </div>
 
@@ -276,14 +449,20 @@ const VideoSharePage_Desktop = () => {
                                         <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M5.75 13.0872V3.38338C5.75 2.9821 5.75 2.78146 5.823 2.61873C5.88735 2.47528 5.99097 2.35296 6.12189 2.2659C6.2704 2.16714 6.46831 2.13416 6.86413 2.06819L14.1975 0.845964C14.7316 0.756941 14.9987 0.712429 15.2068 0.789738C15.3895 0.85758 15.5426 0.987279 15.6395 1.15629C15.75 1.34889 15.75 1.61965 15.75 2.16116V11.4205M5.75 13.0872C5.75 14.4679 4.63071 15.5872 3.25 15.5872C1.86929 15.5872 0.75 14.4679 0.75 13.0872C0.75 11.7065 1.86929 10.5872 3.25 10.5872C4.63071 10.5872 5.75 11.7065 5.75 13.0872ZM15.75 11.4205C15.75 12.8013 14.6307 13.9205 13.25 13.9205C11.8693 13.9205 10.75 12.8013 10.75 11.4205C10.75 10.0398 11.8693 8.92054 13.25 8.92054C14.6307 8.92054 15.75 10.0398 15.75 11.4205Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
-                                        <span className="audio-text">我是一个 BGM...</span>
+                                        {video?.resource?.bg_music_list?.title?.length > 0
+                                            ? <span className="audio-text">{video.resource.bg_music_list[0].title}</span>
+                                            : <span>--</span>
+                                        }
                                     </span>
 
                                     <span className="audio-item">
                                         <svg width="14" height="19" viewBox="0 0 14 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12.4167 7.41667V9.08333C12.4167 12.305 9.80499 14.9167 6.58333 14.9167M0.75 7.41667V9.08333C0.75 12.305 3.36167 14.9167 6.58333 14.9167M6.58333 14.9167V17.4167M3.25 17.4167H9.91667M6.58333 11.5833C5.20262 11.5833 4.08333 10.464 4.08333 9.08333V3.25C4.08333 1.86929 5.20262 0.75 6.58333 0.75C7.96404 0.75 9.08333 1.86929 9.08333 3.25V9.08333C9.08333 10.464 7.96404 11.5833 6.58333 11.5833Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
-                                        <span className="audio-text">中年男子配音</span>
+                                        {video?.resource?.ai_voiceover_list?.[0]?.title
+                                            ? <span className="audio-text">{video.resource.ai_voiceover_list[0].title}</span>
+                                            : <span>--</span>
+                                        }
                                     </span>
                                 </p>
                             </div>
@@ -292,7 +471,8 @@ const VideoSharePage_Desktop = () => {
                 </div>
             </div>
 
-            {/* QR Code Modal */}
+
+            {/* 二维码模态窗 */}
             {showQRModal && (
                 <div className="qr-modal-overlay" onClick={handleCloseModal}>
                     <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -314,7 +494,6 @@ const VideoSharePage_Desktop = () => {
             )}
         </div>
     );
-};
+}
 
 export default VideoSharePage_Desktop;
-
