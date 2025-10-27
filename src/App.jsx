@@ -4,6 +4,7 @@ import VideoSharePage from "./components/VideoSharePage";
 import VideoSharePage_Desktop from "./components/VideoSharePage_Desktop";
 import DownloadPage from "./components/DownloadPage";
 import BlankPage from "./components/BlankPage";
+import LoadingPage from "./components/Loading";
 import { fetchVideoData } from "./api";
 
 function App() {
@@ -89,7 +90,7 @@ function App() {
   return (
     <div className="app">
       <Routes>
-        <Route path="/" element={<div>Loading...</div>} />
+        <Route path="/" element={<LoadingPage />} />
         <Route path="/mobile" element={<VideoSharePage />} />
         <Route path="/desktop" element={<VideoSharePage_Desktop />} />
         <Route path="/download" element={<DownloadPage />} />
