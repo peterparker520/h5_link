@@ -34,7 +34,7 @@ export const fetchVideoDetails = async (videoId) => {
  */
 export const fetchVideoComments = async (videoId) => {
   try {
-        const response = await fetch(`${API_BASE_URL}/v1/content/video/comment/list`, {
+    const response = await fetch(`${API_BASE_URL}/v1/content/video/comment/list`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export const fetchVideoComments = async (videoId) => {
  */
 export const fetchTemplateCategory = async (templateId) => {
   try {
-        const response = await fetch(`${API_BASE_URL}/v1/distribute/template/category_names`, {
+    const response = await fetch(`${API_BASE_URL}/v1/distribute/template/category_names`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,10 +89,12 @@ export const fetchVideoData = async (videoId) => {
       fetchVideoComments(videoId)
     ]);
 
-    const template_id=videoDetails?.data?.video_info?.video?.template?.id;
-    const categoryNames = await Promise.all([
-      fetchTemplateCategory(template_id)
-    ]);
+    const template_id = videoDetails?.data?.video_info?.video?.template?.id;
+
+    const categoryNames = template_id
+      ? await Promise.all([fetchTemplateCategory(template_id)])
+      : [{ data: {} }]; // 让结构一致
+
     return {
       videoDetails,
       videoComments,
