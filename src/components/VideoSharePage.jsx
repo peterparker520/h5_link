@@ -11,6 +11,7 @@ const VideoSharePage = () => {
   const videoRef = useRef(null)
   const repaintTimerRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
 
   // Get data from route state
   const { videoDetails, videoComments } = location.state || {}
