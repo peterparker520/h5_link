@@ -304,12 +304,14 @@ html, body {
   padding: 2px 5px;
   border-radius: 5px;
   margin-left: 5px;
-  background-color: #ffd700;
-  color: #fff;
+  background-color: #FF682B33;
+  color: #FF682B;
+  border-radius: 11px;
 }
 
 .comment-badge.blue {
-  background-color: #1e90ff;
+  background-color: #DFE9FF;
+  color: #3D7BFF;
 }
 
 .comment-text {
