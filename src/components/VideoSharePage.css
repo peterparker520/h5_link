@@ -170,7 +170,7 @@ html, body {
 
 /* 标签、标题和描述 */
 .tags {
-  padding: 10px 0;
+  padding: 5px 0;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -248,7 +248,6 @@ html, body {
   font-weight: 500;
 }
 
-/* 评论区 */
 .comments-section {
   padding: 10px 0;
 }
