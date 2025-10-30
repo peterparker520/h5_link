@@ -249,7 +249,7 @@ html, body {
 }
 
 .comments-section {
-  padding: 10px 0;
+  padding: 0;
 }
 
 .comments-title {
@@ -492,3 +492,12 @@ html, body {
   pointer-events: none; /* 不阻挡鼠标操作 */
 }
 
+.line {
+  position: relative;
+  left: 50%;
+  width: 100vw;       /* 视口宽度100% */
+  transform: translateX(-50%);
+  height: 10px;
+  background-color: #F5F5F5;
+  margin-top: 10px;
+}

@@ -375,7 +375,10 @@ const VideoSharePage = () => {
             <span className="text">分享微信</span>
           </div>
         </div>
-
+        
+        {/* 分割线 */}
+        <div className="line"></div>
+        
         {/* 评论区 */}
         <div className="comments-section">
           <h3 className="comments-title">精彩评论 <span style={{color:"#737373"}}>({comment_count})</span></h3>
