@@ -351,9 +351,9 @@ const VideoSharePage_Desktop = () => {
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="show-more-comments">
+                                            {comment_list[0].reply_count&&<div className="show-more-comments">
                                                 <span>全部{comment_list[0].reply_count}条回复▼</span>
-                                            </div>
+                                            </div>}
                                         </div>
                                     </div>}
                                     <div className="container">
