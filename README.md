@@ -149,3 +149,7 @@ pm2 start proxy-server.js --name h5-link-proxy
 4.  **设备判断**：通过 `window.innerWidth` 判断用户设备是移动端还是桌面端。
 5.  **路由重定向**：使用 `react-router-dom` 的 `navigate` 函数，根据设备类型将用户重定向到 `/mobile` 或 `/desktop`，并通过 `state` 将获取到的视频数据传递给目标页面组件。
 6.  **页面渲染**：`VideoSharePage` 或 `VideoSharePage_Desktop` 组件接收到数据后，完成最终的页面渲染。
+
+
+
+## 你好
