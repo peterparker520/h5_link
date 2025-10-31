@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import VideoSharePage from "./components/VideoSharePage";
 import VideoSharePage_Desktop from "./components/VideoSharePage_Desktop";
 import DownloadPage from "./components/DownloadPage";
@@ -49,17 +49,14 @@ function App() {
         } else {
           setError('Failed to fetch video data.');
         }
-      } catch (err) {
+      } catch {
         setError('An error occurred while fetching data.');
       }
     };
 
     // Only fetch data if we are at the root path
     if (location.pathname === '/') {
-
       fetchDataAndNavigate();
-    } else {
-
     }
 
     const handleResize = () => {

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 
 const OpenAppButton = () => {
   const universalLink = "https://yourdomain.com/ulink/open"; // iOS 通用链接
@@ -11,7 +11,7 @@ const OpenAppButton = () => {
   const isWeChat = /micromessenger/i.test(navigator.userAgent);
 
   // 主唤起函数
-  const openApp = () => {
+  const openApp = useCallback(() => {
     const now = Date.now();
 
     if (isWeChat && isAndroid) {
@@ -32,12 +32,12 @@ const OpenAppButton = () => {
         window.location.href = downloadUrl;
       }
     }, 1500);
-  };
+  }, [isWeChat, isAndroid, isIOS, universalLink, androidScheme, downloadUrl]);
 
   // 页面加载后自动尝试唤起（可选）
   useEffect(() => {
     openApp();
-  }, []);
+  }, [openApp]);
 
   return (
     <div

@@ -1,34 +1,17 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useRef, useEffect, useState } from 'react';
 import './VideoSharePage_Desktop.css';
 import { formatTime } from '../utils/timeFormatter';
 import qr_code from '../img/qr_code.png';
 
 const VideoSharePage_Desktop = () => {
-    const navigate = useNavigate()
     const location = useLocation()
     const videoRef = useRef(null);
-    const [isVideoLoaded, setIsVideoLoaded] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
 
     // Get data from route state
     const { videoDetails, videoComments, categoryNames } = location.state || {}
-
-    
-    if (!videoDetails || !videoComments) {
-        return <div>No video data available</div>
-    }
-    const { video_info, user_info } = videoDetails
-    const { video } = video_info
-    const { profile } = user_info
-    const { comment_list, comment_count } = videoComments
-    const create_time = formatTime(video.create_time);
-    const comment_time_1 = formatTime(comment_list[0]?.comment_time);
-    const comment_time_2 = formatTime(comment_list[1]?.comment_time);
-    const comment_time_3 = formatTime(comment_list[2]?.comment_time);
-    const {category_names}=categoryNames || '';
-
 
     // 检测是否为iOS微信环境
     const isIOSWeChat = () => {
@@ -80,9 +63,6 @@ const VideoSharePage_Desktop = () => {
 
             // 视频数据加载完成事件
             const handleLoadedData = () => {
-                setIsVideoLoaded(true)
-
-
                 // 数据加载完成后再次激活GPU渲染
                 if (isIOSWeChat()) {
                     activateGPURendering(video)
@@ -92,7 +72,6 @@ const VideoSharePage_Desktop = () => {
             // 视频开始播放事件
             const handlePlay = () => {
                 setIsPlaying(true)
-
 
                 // 播放开始时激活GPU渲染
                 if (isIOSWeChat()) {
@@ -114,19 +93,16 @@ const VideoSharePage_Desktop = () => {
             // 视频暂停事件
             const handlePause = () => {
                 setIsPlaying(false)
-
             }
 
             // 视频结束事件
             const handleEnded = () => {
                 setIsPlaying(false)
-
             }
 
             // 视频加载错误事件
             const handleError = (e) => {
                 console.error('视频加载错误:', e)
-                setIsVideoLoaded(false)
             }
 
             // 视频时间更新事件 - 用于iOS微信GPU渲染保持
@@ -158,7 +134,21 @@ const VideoSharePage_Desktop = () => {
                 video.removeEventListener('timeupdate', handleTimeUpdate)
             }
         }
-    }, [isPlaying]) // 依赖isPlaying状态
+    }, [isPlaying, activateGPURendering]) // 依赖isPlaying状态
+
+
+    if (!videoDetails || !videoComments) {
+        return <div>No video data available</div>
+    }
+    const { video_info, user_info } = videoDetails
+    const { video } = video_info
+    const { profile } = user_info
+    const { comment_list, comment_count } = videoComments
+    const create_time = formatTime(video.create_time);
+    const comment_time_1 = formatTime(comment_list[0]?.comment_time);
+    const comment_time_2 = formatTime(comment_list[1]?.comment_time);
+    const comment_time_3 = formatTime(comment_list[2]?.comment_time);
+    const {category_names}=categoryNames || '';
 
     // 点击非视频区域显示二维码模态窗
     const handlePageClick = () => {

@@ -11,24 +11,10 @@ const VideoSharePage = () => {
   const videoRef = useRef(null)
   const repaintTimerRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
 
   // Get data from route state
   const { videoDetails, videoComments } = location.state || {}
-
-  // If no data is available, show error or redirect
-  if (!videoDetails || !videoComments) {
-    return <div>No video data available</div>
-  }
-
-  const { video_info, user_info } = videoDetails
-  const { video } = video_info
-  const { profile } = user_info
-  const { comment_list, comment_count } = videoComments
-  const create_time = formatTime(video.create_time);
-  const comment_time_1 = formatTime(comment_list[0]?.comment_time);
-  const comment_time_2 = formatTime(comment_list[1]?.comment_time);
-  const comment_time_3 = formatTime(comment_list[2]?.comment_time);
 
   // 检测是否为iOS微信环境
   const isIOSWeChat = () => {
@@ -51,7 +37,6 @@ const VideoSharePage = () => {
       // 强制重绘
       video.style.display = 'none'
       // 触发重排
-      // eslint-disable-next-line no-unused-expressions
       video.offsetHeight
       video.style.display = 'block'
     }
@@ -109,8 +94,6 @@ const VideoSharePage = () => {
 
       // 视频数据加载完成事件
       const handleLoadedData = () => {
-        setIsVideoLoaded(true)
-
         // 数据加载完成后再次激活GPU渲染
         if (isIOSWeChat()) {
           activateGPURendering(video)
@@ -134,7 +117,7 @@ const VideoSharePage = () => {
               const currentTime = video.currentTime
               video.currentTime = currentTime + 0.001
               video.currentTime = currentTime
-            } catch (e) {
+            } catch {
               // 忽略可能的 DOM 异常
             }
           }
@@ -163,7 +146,6 @@ const VideoSharePage = () => {
       // 视频加载错误事件
       const handleError = (e) => {
         console.error('视频加载错误:', e)
-        setIsVideoLoaded(false)
       }
 
       // 视频时间更新事件 - 用于iOS微信GPU渲染保持
@@ -193,7 +175,21 @@ const VideoSharePage = () => {
         video.removeEventListener('timeupdate', handleTimeUpdate)
       }
     }
-  }, [isPlaying]) // 依赖isPlaying状态
+  }, [isPlaying, activateGPURendering]) // 依赖isPlaying状态
+
+  // If no data is available, show error or redirect
+  if (!videoDetails || !videoComments) {
+    return <div>No video data available</div>
+  }
+
+  const { video_info, user_info } = videoDetails
+  const { video } = video_info
+  const { profile } = user_info
+  const { comment_list, comment_count } = videoComments
+  const create_time = formatTime(video.create_time);
+  const comment_time_1 = formatTime(comment_list[0]?.comment_time);
+  const comment_time_2 = formatTime(comment_list[1]?.comment_time);
+  const comment_time_3 = formatTime(comment_list[2]?.comment_time);
 
   // 点击非视频区域跳转到下载页面
   const handlePageClick = () => {
