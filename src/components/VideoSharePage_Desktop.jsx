@@ -193,7 +193,7 @@ const VideoSharePage_Desktop = () => {
                         </div>
                     </div>
                     <div className="header-right">
-                        <span className="about-us">关于我们</span>
+                        <a href="https://shiguangpai.xinpianchang.com" target="_blank" rel="noopener noreferrer" className="about-us">关于我们</a>
                         <button className="open-app-btn" onClick={handleDownloadClick}>下载APP</button>
                     </div>
                 </div>
