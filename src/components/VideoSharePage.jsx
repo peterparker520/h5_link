@@ -14,7 +14,7 @@ const VideoSharePage = () => {
 
 
   // Get data from route state
-  const { videoDetails, videoComments } = location.state || {}
+  const { videoDetails, videoComments, categoryNames } = location.state || {}
 
   // 检测是否为iOS微信环境
   const isIOSWeChat = () => {
@@ -190,6 +190,7 @@ const VideoSharePage = () => {
   const comment_time_1 = formatTime(comment_list[0]?.comment_time);
   const comment_time_2 = formatTime(comment_list[1]?.comment_time);
   const comment_time_3 = formatTime(comment_list[2]?.comment_time);
+  const {category_names}=categoryNames || '';
 
   // 点击非视频区域跳转到下载页面
   const handlePageClick = () => {
@@ -284,9 +285,11 @@ const VideoSharePage = () => {
 
         {/* 标签区域 */}
         <div className="tags">
-          <span className="tag">#旅行vlog</span>
-          <span className="tag">#旅行日常</span>
-          <span className="tag">#日系旅行</span>
+          {category_names?.[0] && <span className="tag">#{category_names[0]}</span>}
+          {category_names?.[1] && <span className="tag">#{category_names[1]}</span>}
+          {category_names?.[2] && <span className="tag">#{category_names[2]}</span>}
+          {category_names?.[3] && <span className="tag">#{category_names[3]}</span>}
+          {category_names?.[4] && <span className="tag">#{category_names[4]}</span>}
         </div>
 
         {/* 视频标题 */}
@@ -298,7 +301,7 @@ const VideoSharePage = () => {
         </p>
 
         {/* 推广卡片 */}
-        {video.template.name&&<div className="promo-card">
+        {video.template.name && <div className="promo-card">
           <img src={video.template.cover_url} alt={video.template.name} className="promo-image" />
           <div className="promo-content">
             <div className="promo-text-content">
@@ -372,13 +375,13 @@ const VideoSharePage = () => {
             <span className="text">分享微信</span>
           </div>
         </div>
-        
+
         {/* 分割线 */}
         <div className="line"></div>
-        
+
         {/* 评论区 */}
         <div className="comments-section">
-          <h3 className="comments-title">精彩评论 <span style={{color:"#737373"}}>({comment_count})</span></h3>
+          <h3 className="comments-title">精彩评论 <span style={{ color: "#737373" }}>({comment_count})</span></h3>
 
           {comment_count === 0 ? (
             <div className="no-comments">
@@ -442,7 +445,7 @@ const VideoSharePage = () => {
                       </span>
                     </div>
                   </div>
-                  {comment_list[0].reply_count&&<div className="show-more-comments">
+                  {comment_list[0].reply_count && <div className="show-more-comments">
                     <span>全部{comment_list[0].reply_count}条回复▼</span>
                   </div>}
                 </div>
