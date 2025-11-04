@@ -245,7 +245,7 @@ export default defineConfig({
 npm run build
 ```
 
-2. **配置 Nginx 反向代理**
+2. **配置 OpenResty(Nginx) 反向代理**
 ```nginx
 server {
     listen 80 ; 
