@@ -301,7 +301,7 @@ const VideoSharePage = () => {
         </p>
 
         {/* 推广卡片 */}
-        {video.template.name && <div className="promo-card">
+        {video.template?.name && <div className="promo-card">
           <img src={video.template.cover_url} alt={video.template.name} className="promo-image" />
           <div className="promo-content">
             <div className="promo-text-content">
